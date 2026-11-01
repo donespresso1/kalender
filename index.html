@@ -237,10 +237,12 @@ const PRESET=["#EF6461","#F28C4A","#F2A54A","#F2C94C","#9BCB5B","#4FC39A","#3FBF
 
 /* ---------- local data ---------- */
 const CACHE="kalender-v1",QKEY="kalender-queue",VKEY="kalender-view";
+// Demo-modus (#demo): oppdiktede data i minnet. Ingen database, ingen lagring, rører aldri dine ekte data.
+const DEMO=location.hash==="#demo";
 let data={events:{},deadlines:{},notes:{}};
-try{const c=JSON.parse(localStorage.getItem(CACHE)||"null");if(c&&c.events)data=c}catch(e){}
-let queue=[];try{queue=JSON.parse(localStorage.getItem(QKEY)||"[]")||[]}catch(e){}
-const saveLocal=()=>{try{localStorage.setItem(CACHE,JSON.stringify(data));localStorage.setItem(QKEY,JSON.stringify(queue))}catch(e){}};
+if(!DEMO){try{const c=JSON.parse(localStorage.getItem(CACHE)||"null");if(c&&c.events)data=c}catch(e){}}
+let queue=[];if(!DEMO){try{queue=JSON.parse(localStorage.getItem(QKEY)||"[]")||[]}catch(e){}}
+const saveLocal=()=>{if(DEMO)return;try{localStorage.setItem(CACHE,JSON.stringify(data));localStorage.setItem(QKEY,JSON.stringify(queue))}catch(e){}};
 
 /* ---------- view state ---------- */
 let n=window.innerWidth<760?3:7;
@@ -251,11 +253,12 @@ let lastColor=PRESET[8];
 
 /* ---------- sync (Supabase) ---------- */
 const cfg=window.CAL_CONFIG||{};
-const sb=(cfg.url&&cfg.key&&window.supabase&&window.supabase.createClient)?window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true}}):null;
+const sb=(!DEMO&&cfg.url&&cfg.key&&window.supabase&&window.supabase.createClient)?window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true}}):null;
 let user=null,pushing=false,pushTimer=null;
 const TABLE={events:"cal_events",deadlines:"cal_deadlines",notes:"cal_notes"};
 const setStatus=t=>{$("status").textContent=t};
 function enqueue(kind,key,op){
+  if(DEMO){setStatus("Demo: ingenting lagres");return}
   const ix=queue.findIndex(q=>q.kind===kind&&q.key===key);
   const v=(ix>=0?queue[ix].v:0)+1;
   const item={kind,key,op,v};
@@ -320,6 +323,11 @@ async function pull(){
 /* ---------- account panel ---------- */
 function renderAccount(msg){
   const el=$("acct");
+  if(DEMO){
+    el.innerHTML='<p style="margin:0 0 6px;font-weight:700;font-size:16px">Demo</p><p class="hint" style="margin:0 0 10px">Du ser en demo med oppdiktede data. Ingenting lagres, og demoen er ikke koblet til noen database.</p><button class="btn" id="exitDemo" style="width:100%">Avslutt demo</button>';
+    $("exitDemo").onclick=()=>{location.href=location.pathname};
+    return;
+  }
   if(!sb){el.innerHTML='<p class="hint" style="margin:0">Synk er ikke satt opp. Legg inn Supabase-detaljene i config.js.</p>';return}
   if(user){
     el.innerHTML='<p class="hint" style="margin:0 0 10px">Synker som <b style="color:var(--ink)">'+esc(user.email||"")+'</b></p><div class="row"><button class="btn" id="syncNow">Synk nå</button><button class="btn" id="logout">Logg ut</button></div>';
@@ -330,18 +338,14 @@ function renderAccount(msg){
   el.innerHTML='<p style="margin:0 0 10px;font-weight:700;font-size:16px">Logg inn for å synke</p>'+
     '<div class="fld" style="margin-bottom:8px"><label for="em">E-post</label><input class="in" id="em" type="email" autocomplete="email" inputmode="email"></div>'+
     '<div class="fld" style="margin-bottom:10px"><label for="pw">Passord</label><input class="in" id="pw" type="password" autocomplete="current-password"></div>'+
-    '<div class="row"><button class="btn primary" id="login" style="flex:1">Logg inn</button><button class="btn" id="signup" style="flex:1">Opprett konto</button></div>'+
+    '<div class="row"><button class="btn primary" id="login" style="flex:1">Logg inn</button><button class="btn" id="tryDemo" style="flex:1">Prøv demo</button></div>'+
     (msg?'<p class="'+(msg.ok?"hint":"err")+'" role="alert" style="margin:8px 0 0">'+esc(msg.text||msg)+'</p>':'');
   const go=async()=>{const em=$("em").value.trim(),pw=$("pw").value;
     if(!em||!pw){renderAccount("Skriv inn e-post og passord.");return}
     setStatus("Logger inn…");
     const{error}=await sb.auth.signInWithPassword({email:em,password:pw});
     if(error){renderAccount(error.message==="Invalid login credentials"?"Feil e-post eller passord.":error.message);setStatus("Lagret på denne enheten. Logg inn for å synke.")}};
-  $("signup").onclick=async()=>{const em=$("em").value.trim(),pw=$("pw").value;
-    if(!em||pw.length<6){renderAccount("Skriv e-post og et passord på minst 6 tegn.");return}
-    const{data:d,error}=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:location.origin+location.pathname}});
-    if(error){renderAccount(error.message);return}
-    if(!d.session)renderAccount({ok:true,text:"Konto opprettet. Åpne e-posten fra Supabase, bekreft den, og logg inn her."})};
+  $("tryDemo").onclick=()=>{location.hash="demo"};
   $("login").onclick=go;$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")go()});
 }
 
@@ -351,7 +355,7 @@ function eventsOn(ds){return Object.values(data.events).filter(e=>e.day===ds).so
 function renderToolbar(){
   const end=add(vs,n-1),w=iso(vs).w;
   $("mt").textContent=MN[vs.getMonth()]+" "+vs.getFullYear();
-  $("rt").textContent="Uke "+w+" · "+vs.getDate()+"."+(vs.getMonth()+1)+" – "+end.getDate()+"."+(end.getMonth()+1);
+  $("rt").textContent="Uke "+w+" · "+vs.getDate()+"."+(vs.getMonth()+1)+" – "+end.getDate()+"."+(end.getMonth()+1)+(DEMO?" · Demo":"");
   $("vw").classList.toggle("on",n===7);$("v3").classList.toggle("on",n===3);
   $("vw").setAttribute("aria-pressed",n===7);$("v3").setAttribute("aria-pressed",n===3);
 }
@@ -401,8 +405,8 @@ function renderEditor(){
   el.innerHTML='<section class="editor" aria-label="Rediger hendelse">'+
     '<div class="fields"><div class="fld grow"><label for="et">Navn</label><input class="in title" id="et"></div>'+
     '<div class="fld"><label for="eday">Dato</label><input class="in" id="eday" type="date"></div>'+
-    '<div class="fld"><label for="es">Start</label><input class="in" id="es" type="time"></div>'+
-    '<div class="fld"><label for="ee">Slutt</label><input class="in" id="ee" type="time"></div></div>'+
+    '<div class="fld"><label for="es">Start</label><input class="in" id="es" inputmode="numeric" autocomplete="off" placeholder="f.eks. 17" style="width:110px"></div>'+
+    '<div class="fld"><label for="ee">Slutt</label><input class="in" id="ee" inputmode="numeric" autocomplete="off" placeholder="f.eks. 1930" style="width:110px"></div></div><div class="err" id="terr" role="alert"></div>'+
     '<div class="pal" id="pal" aria-label="Farge"></div>'+
     '<div class="row between"><div class="row"><button class="btn danger" id="del">Slett</button><button class="btn" id="cpo">Kopier</button></div><button class="btn light" id="ok">Ferdig</button></div>'+
     '<div id="cp"></div></section>';
@@ -411,8 +415,13 @@ function renderEditor(){
   const save=()=>{enqueue("events",e.id,"upsert");renderDays()};
   t.oninput=()=>{e.title=t.value;save()};
   dd.onchange=()=>{if(dd.value){e.day=dd.value;save();copySel.clear();renderCopy()}};
-  s.onchange=()=>{e.start=s.value;if(e.start&&(!e.end||toMin(e.end)<=toMin(e.start))){const m=Math.min(23*60+59,toMin(e.start)+60);e.end=pad(Math.floor(m/60))+":"+pad(m%60);en.value=e.end}if(!e.start){e.end="";en.value=""}save()};
-  en.onchange=()=>{if(!en.value||(e.start&&toMin(en.value)>toMin(e.start))){e.end=en.value;save()}else en.value=e.end};
+  const parseT=v=>{v=v.trim().replace(/[.,]/g,":");if(!v)return"";let hh,mm;
+    if(/^\d{1,2}$/.test(v)){hh=+v;mm=0}else if(/^\d{3,4}$/.test(v)){hh=+v.slice(0,-2);mm=+v.slice(-2)}else{const x=v.match(/^(\d{1,2}):(\d{1,2})$/);if(!x)return null;hh=+x[1];mm=+x[2]}
+    return hh<24&&mm<60?pad(hh)+":"+pad(mm):null};
+  const terr=$("terr");
+  s.onchange=()=>{const v=parseT(s.value);if(v===null){terr.textContent="Skriv tiden som 17, 1730 eller 17:30";s.value=e.start||"";return}terr.textContent="";e.start=v;s.value=v;if(!v){e.end="";en.value=""}else if(!e.end||toMin(e.end)<=toMin(v)){const m=Math.min(23*60+59,toMin(v)+60);e.end=pad(Math.floor(m/60))+":"+pad(m%60);en.value=e.end}save()};
+  en.onchange=()=>{const v=parseT(en.value);if(v===null){terr.textContent="Skriv tiden som 19, 1930 eller 19:30";en.value=e.end||"";return}if(v&&!e.start){terr.textContent="Skriv starttid først";en.value="";return}if(v&&toMin(v)<=toMin(e.start)){terr.textContent="Slutt må være etter start";en.value=e.end||"";return}terr.textContent="";e.end=v;en.value=v;save()};
+  [s,en].forEach(x=>{x.addEventListener("focus",()=>setTimeout(()=>x.select(),0));x.addEventListener("keydown",k=>{if(k.key==="Enter")x.blur()})});
   renderPalette(e);
   $("del").onclick=()=>{const title=e.title;delete data.events[e.id];enqueue("events",e.id,"delete");closeEditor();renderDays();toast("«"+(title||"Uten navn")+"» er slettet")};
   $("ok").onclick=()=>{closeEditor();renderDays()};
@@ -509,6 +518,20 @@ $("dls").addEventListener("click",ev=>{
 /* ---------- events: notes ---------- */
 $("na").addEventListener("input",ev=>{const k=weekId(vs);data.notes[k]=ev.target.value;enqueue("notes",k,"upsert")});
 
+/* ---------- demo data ---------- */
+function seedDemo(){
+  const m=monOf(today()),D=i=>ymd(add(m,i));
+  const ev=[[0,"Forelesning: Databaser","08:15","10:00","#5B8DEF"],[0,"Gruppemøte: prosjekt","12:00","13:30","#F2A54A"],[0,"Trening","17:00","18:30","#EF6461"],
+    [1,"Lab: Nettverk","10:15","14:00","#3FBFB8"],[1,"Lesesal","15:00","17:00","#7C7FF2"],[2,"Jobb","16:00","20:00","#F2C94C"],
+    [3,"Forelesning: Databaser","08:15","10:00","#5B8DEF"],[3,"Trening","17:00","18:30","#EF6461"],[4,"Veiledning bachelor","13:00","14:00","#A78BFA"],
+    [4,"Middag med venner","19:00","21:30","#EE7BB3"],[5,"Fotballkamp","12:45","14:30","#4FC39A"],[6,"Planlegge uka","","","#9BCB5B"],
+    [7,"Forelesning: Databaser","08:15","10:00","#5B8DEF"],[7,"Trening","17:00","18:30","#EF6461"],[9,"Jobb","16:00","20:00","#F2C94C"]];
+  ev.forEach(([d,t,s,e,c])=>{const id=uuid();data.events[id]={id,day:D(d),title:t,start:s,end:e,color:c}});
+  const dl=[[3,"Oblig 2: Databaser","23:59",false,false],[11,"Labrapport: Nettverk","12:00",true,false],[24,"Prosjektrapport","23:59",true,false],[1,"Quiz 1","10:00",false,true]];
+  dl.forEach(([d,t,k,p,done])=>{const id=uuid();data.deadlines[id]={id,title:t,date:D(d),time:k,done,pinned:p}});
+  data.notes[weekId(m)]="Dette er en demo med oppdiktede data.\nPrøv å kopiere en hendelse, feste en frist eller bytte til 3 dager.";
+}
+
 /* ---------- start ---------- */
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
 if(sb){
@@ -520,8 +543,11 @@ if(sb){
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&user){renderAll();pull()}});
   window.addEventListener("online",()=>{if(user)push()});
   setInterval(()=>{if(!document.hidden&&user)pull()},60000);
-}else setStatus("Lagret på denne enheten");
+}else setStatus(DEMO?"Demo: ingenting lagres":"Lagret på denne enheten");
+if(DEMO)seedDemo();
+window.addEventListener("hashchange",()=>location.reload());
 renderAccount();renderAll();
+if(DEMO)toast("Demo med oppdiktede data. Ingenting du gjør her lagres.");
 if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(()=>{})}
 })();
 </script>
