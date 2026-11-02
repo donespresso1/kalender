@@ -27,6 +27,7 @@
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 html,body{margin:0;background:var(--bg)}
 body{color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -153,6 +154,19 @@ textarea.in{height:auto;padding:12px 14px;line-height:1.65;resize:vertical;width
 .dform{margin-top:6px}
 .pinopt{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,236,220,.20);background:var(--well);color:var(--ink);font-size:13px;cursor:pointer}
 .pinopt input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.exhero{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px}
+.exbig{font-size:52px;font-weight:700;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.exmeta{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.exmeta svg{width:15px;height:15px;flex:none}
+.excard{min-height:170px;display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:18px;cursor:pointer;text-align:left;color:var(--ink);width:100%}
+.excard .dtop{margin-bottom:2px}
+.extype{font-size:11px;font-weight:600;border-radius:7px;padding:2px 8px;background:rgba(255,236,220,.12);color:#E9D9CA}
+.excard .badge{align-self:flex-start;margin-top:auto}
+.excard.past{opacity:.6;min-height:0}
+.excard.past .dtitle{text-decoration:line-through}
+.excard.editing{box-shadow:0 0 0 2px var(--ink)}
+.exflag{font-size:11px;font-weight:600;color:#2A1B12;background:var(--accent);border-radius:8px;padding:2px 7px}
+select.in{padding-right:8px}
 @media (max-width:760px){
   .shell{padding:12px;gap:12px}
   .side{display:none}
@@ -173,7 +187,8 @@ textarea.in{height:auto;padding:12px 14px;line-height:1.65;resize:vertical;width
 <div class="shell">
   <nav class="side glass" aria-label="Hovedmeny">
     <div class="logo" aria-hidden="true">M</div>
-    <button class="navb on" aria-label="Kalender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></button>
+    <button class="navb on" id="navCal" aria-label="Kalender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></button>
+    <button class="navb" id="navEx" aria-label="Eksamener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.5v4.5c1.5 1.6 3.4 2.5 5.5 2.5s4-.9 5.5-2.5v-4.5"/><path d="M21.5 9.5v5"/></svg></button>
     <button class="navb" id="navDl" aria-label="Gå til frister"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></button>
     <button class="navb" id="navNt" aria-label="Gå til notater"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></button>
     <button class="navb" id="navAc" aria-label="Konto og synk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c1.5-3.5 4.3-5 7.5-5s6 1.5 7.5 5"/></svg></button>
@@ -183,11 +198,14 @@ textarea.in{height:auto;padding:12px 14px;line-height:1.65;resize:vertical;width
     <div class="toolbar glass">
       <div><h1 id="mt"></h1><div class="sub" id="rt"></div></div>
       <div class="tools">
+        <div class="seg" role="group" aria-label="Side"><button id="tabCal">Kalender</button><button id="tabEx">Eksamener</button></div>
+        <div class="tools" id="calTools">
         <button class="btn primary" id="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ny</button>
         <div class="seg" role="group" aria-label="Visning"><button id="vw">Uke</button><button id="v3">3 dager</button></div>
         <button class="btn" id="td">I dag</button>
         <button class="btn icon" id="pv" aria-label="Tilbake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
         <button class="btn icon" id="nx" aria-label="Fremover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
       </div>
     </div>
     <div id="toast"></div>
@@ -211,6 +229,31 @@ textarea.in{height:auto;padding:12px 14px;line-height:1.65;resize:vertical;width
         <button class="btn light" id="fa">Legg til</button>
       </div>
       <div class="err" id="fe" role="alert"></div>
+    </section>
+    <section id="exPage" hidden aria-label="Eksamener">
+      <div id="exWarn"></div>
+      <div class="panel glass exhero" id="exHero"></div>
+      <div class="dgrid" id="exGrid" style="margin-top:14px"></div>
+      <div id="exDone"></div>
+      <section class="panel glass" style="margin-top:14px" aria-labelledby="exfh">
+        <h2 id="exfh"><svg viewBox="0 0 24 24" fill="none" stroke="#E0A86E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="exFormTitle">Legg til eksamen</span></h2>
+        <div class="row">
+          <div class="fld" style="flex:1 1 200px"><label for="exS">Fag</label><input class="in" id="exS" placeholder="F.eks. Software Engineering"></div>
+          <div class="fld"><label for="exK">Type</label><select class="in" id="exK"><option>Skriftlig</option><option>Muntlig</option><option>Hjemmeeksamen</option><option>Annet</option></select></div>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="exD">Dato</label><input class="in" id="exD" type="date"></div>
+          <div class="fld"><label for="exD2">Til dato (valgfritt)</label><input class="in" id="exD2" type="date"></div>
+          <div class="fld"><label for="exT1">Start</label><input class="in" id="exT1" inputmode="numeric" autocomplete="off" placeholder="f.eks. 9" style="width:100px"></div>
+          <div class="fld"><label for="exT2">Slutt</label><input class="in" id="exT2" inputmode="numeric" autocomplete="off" placeholder="f.eks. 13" style="width:100px"></div>
+        </div>
+        <div class="row">
+          <div class="fld" style="flex:1 1 200px"><label for="exP">Sted</label><input class="in" id="exP" placeholder="F.eks. Remmen, sal A"></div>
+          <div class="fld"><label for="exC">Farge</label><input class="in" id="exC" type="color" value="#F2A54A" style="width:64px;padding:4px"></div>
+        </div>
+        <div class="row" style="margin-top:4px"><button class="btn light" id="exAdd">Legg til</button><button class="btn" id="exCancel" hidden>Avbryt</button></div>
+        <div class="err" id="exE" role="alert"></div>
+      </section>
     </section>
   </main>
 
@@ -256,8 +299,8 @@ const PRESET=["#EF6461","#F28C4A","#F2A54A","#F2C94C","#9BCB5B","#4FC39A","#3FBF
 const CACHE="kalender-v1",QKEY="kalender-queue",VKEY="kalender-view";
 // Demo-modus (#demo): oppdiktede data i minnet. Ingen database, ingen lagring, rører aldri dine ekte data.
 const DEMO=location.hash==="#demo";
-let data={events:{},deadlines:{},notes:{}};
-if(!DEMO){try{const c=JSON.parse(localStorage.getItem(CACHE)||"null");if(c&&c.events)data=c}catch(e){}}
+let data={events:{},deadlines:{},notes:{},exams:{}};
+if(!DEMO){try{const c=JSON.parse(localStorage.getItem(CACHE)||"null");if(c&&c.events){data=c;if(!data.exams)data.exams={}}}catch(e){}}
 let queue=[];if(!DEMO){try{queue=JSON.parse(localStorage.getItem(QKEY)||"[]")||[]}catch(e){}}
 const saveLocal=()=>{if(DEMO)return;try{localStorage.setItem(CACHE,JSON.stringify(data));localStorage.setItem(QKEY,JSON.stringify(queue))}catch(e){}};
 
@@ -272,7 +315,8 @@ let lastColor=PRESET[8];
 const cfg=window.CAL_CONFIG||{};
 const sb=(!DEMO&&cfg.url&&cfg.key&&window.supabase&&window.supabase.createClient)?window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true}}):null;
 let user=null,pushing=false,pushTimer=null;
-const TABLE={events:"cal_events",deadlines:"cal_deadlines",notes:"cal_notes"};
+const TABLE={events:"cal_events",deadlines:"cal_deadlines",notes:"cal_notes",exams:"cal_exams"};
+let examsMissing=false;
 const setStatus=t=>{$("status").textContent=t};
 function enqueue(kind,key,op){
   if(DEMO){setStatus("Demo: ingenting lagres");return}
@@ -287,14 +331,17 @@ function enqueue(kind,key,op){
 function toRow(kind,key){
   if(kind==="events"){const e=data.events[key];return e&&{id:e.id,user_id:user.id,day:e.day,title:e.title,start_time:e.start||"",end_time:e.end||"",color:e.color,updated_at:new Date().toISOString()}}
   if(kind==="deadlines"){const f=data.deadlines[key];return f&&{id:f.id,user_id:user.id,title:f.title,due_date:f.date,due_time:f.time||"23:59",done:!!f.done,pinned:!!f.pinned,updated_at:new Date().toISOString()}}
+  if(kind==="exams"){const x=data.exams[key];return x&&{id:x.id,user_id:user.id,subject:x.subject,exam_date:x.date,end_date:x.end||null,start_time:x.start||"",end_time:x.endTime||"",place:x.place||"",kind:x.kind||"Skriftlig",color:x.color,updated_at:new Date().toISOString()}}
   if(kind==="notes"){return{user_id:user.id,week_id:key,body:data.notes[key]||"",updated_at:new Date().toISOString()}}
 }
 async function push(){
   if(!user||pushing||!queue.length)return;
-  pushing=true;
+  pushing=true;let skipped=0;
   try{
-    while(queue.length&&user){
-      const q=queue[0],v=q.v;let res;
+    // går gjennom køen én gang; feiler bare eksamener (tabellen mangler), hoppes de over så resten likevel synkes
+    for(const q of queue.slice()){
+      if(!user)break;
+      const v=q.v;let res;
       if(q.op==="delete"){
         res=q.kind==="notes"?await sb.from(TABLE.notes).delete().eq("week_id",q.key):await sb.from(TABLE[q.kind]).delete().eq("id",q.key);
       }else{
@@ -302,12 +349,14 @@ async function push(){
         if(!row){res={error:null}}
         else res=await sb.from(TABLE[q.kind]).upsert(row,{onConflict:q.kind==="notes"?"user_id,week_id":"id"});
       }
-      if(res.error)throw res.error;
+      if(res.error){if(q.kind==="exams"){examsMissing=true;skipped++;continue}throw res.error}
       const ix=queue.findIndex(x=>x.kind===q.kind&&x.key===q.key);
       if(ix>=0&&queue[ix].v===v)queue.splice(ix,1);
       saveLocal();
     }
-    setStatus("Synket");
+    setStatus(skipped?"Synket, men eksamener venter på databasetabellen":"Synket");
+    if(skipped&&page==="ex")renderExams();
+    if(!skipped&&queue.length){pushing=false;return push()}
   }catch(e){
     setStatus(navigator.onLine?"Kunne ikke synke: "+(e.message||"ukjent feil"):"Frakoblet. Endringene synkes når du er på nett igjen.");
   }
@@ -321,7 +370,7 @@ async function fetchAll(table){
 async function pull(){
   if(!user)return;
   try{
-    const[ev,dl,nt]=await Promise.all([fetchAll(TABLE.events),fetchAll(TABLE.deadlines),fetchAll(TABLE.notes)]);
+    const[ev,dl,nt,ex]=await Promise.all([fetchAll(TABLE.events),fetchAll(TABLE.deadlines),fetchAll(TABLE.notes),fetchAll(TABLE.exams).then(r=>{examsMissing=false;return r}).catch(()=>{examsMissing=true;return null})]);
     const pend=k=>new Set(queue.filter(q=>q.kind===k).map(q=>q.key));
     const pe=pend("events"),pdl=pend("deadlines"),pn=pend("notes");
     const E={};Object.values(data.events).forEach(e=>{if(pe.has(e.id))E[e.id]=e});
@@ -330,7 +379,9 @@ async function pull(){
     dl.forEach(r=>{if(!pdl.has(r.id))D[r.id]={id:r.id,title:r.title,date:String(r.due_date),time:r.due_time||"23:59",done:!!r.done,pinned:!!r.pinned}});
     const N={};Object.keys(data.notes).forEach(k=>{if(pn.has(k))N[k]=data.notes[k]});
     nt.forEach(r=>{if(!pn.has(r.week_id))N[r.week_id]=r.body||""});
-    data={events:E,deadlines:D,notes:N};saveLocal();renderAll();
+    const pex=pend("exams"),X={};Object.values(data.exams||{}).forEach(x=>{if(pex.has(x.id)||!ex)X[x.id]=x});
+    (ex||[]).forEach(r=>{if(!pex.has(r.id))X[r.id]={id:r.id,subject:r.subject,date:String(r.exam_date),end:r.end_date?String(r.end_date):"",start:r.start_time||"",endTime:r.end_time||"",place:r.place||"",kind:r.kind||"Skriftlig",color:r.color}});
+    data={events:E,deadlines:D,notes:N,exams:X};saveLocal();renderAll();
     if(queue.length)push();else setStatus("Synket");
   }catch(e){
     setStatus(navigator.onLine?"Kunne ikke hente: "+(e.message||"ukjent feil"):"Frakoblet. Viser det som er lagret på denne enheten.");
@@ -375,6 +426,7 @@ function renderToolbar(){
   $("rt").textContent="Uke "+w+" · "+vs.getDate()+"."+(vs.getMonth()+1)+" – "+end.getDate()+"."+(end.getMonth()+1)+(DEMO?" · Demo":"");
   $("vw").classList.toggle("on",n===7);$("v3").classList.toggle("on",n===3);
   $("vw").setAttribute("aria-pressed",n===7);$("v3").setAttribute("aria-pressed",n===3);
+  if(typeof page!=="undefined"&&page==="ex"){$("mt").textContent="Eksamener";const c=Object.values(data.exams||{}).filter(x=>exEnd(x)>=ymd(today())).length;$("rt").textContent=c?c+(c>1?" kommende eksamener":" kommende eksamen"):"Ingen kommende"}
 }
 const pxPerHour=()=>window.innerWidth<760?44:52;
 function layoutDay(items){ // legger overlappende hendelser side om side
@@ -400,7 +452,7 @@ function renderDays(){
   body+='</div>';
   days.forEach(({d,ds})=>{
     const fl=Object.values(data.deadlines).filter(f=>!f.done&&f.date===ds).length,evs=eventsOn(ds);
-    head+='<div class="dh'+(ds===t?" today":"")+'"><span class="nm">'+DN[d.getDay()]+'</span><span class="num">'+d.getDate()+'</span>'+(fl?'<span class="flag">'+(fl>1?fl+" frister":"Frist")+'</span>':"")+'</div>';
+    head+='<div class="dh'+(ds===t?" today":"")+'"><span class="nm">'+DN[d.getDay()]+'</span><span class="num">'+d.getDate()+'</span>'+(fl?'<span class="flag">'+(fl>1?fl+" frister":"Frist")+'</span>':"")+(examsOn(ds).length?'<span class="exflag" title="'+esc(examsOn(ds).map(x=>x.subject).join(", "))+'">Eksamen</span>':"")+'</div>';
     const ad=evs.filter(e=>!timed(e));if(ad.length)anyAll=true;
     all+='<div class="allday">'+ad.map(e=>'<button class="card ad'+(open===e.id?" sel":fresh.has(e.id)?" fresh":"")+'" draggable="true" data-id="'+e.id+'" style="'+cardStyle(e.color)+'"><span class="t">'+esc(e.title||"Uten navn")+'</span><span class="m">'+dur(e)+'</span></button>').join("")+'</div>';
     body+='<div class="tcol" data-day="'+ds+'" style="height:'+H+'px" aria-label="'+DN[d.getDay()]+" "+d.getDate()+"."+(d.getMonth()+1)+'" title="Trykk for ny hendelse">';
@@ -440,7 +492,7 @@ function renderNotes(){
   const k=weekId(vs);$("ntt").textContent="Notater for uke "+iso(vs).w;
   const na=$("na");if(document.activeElement!==na)na.value=data.notes[k]||"";
 }
-function renderAll(){renderToolbar();renderDays();renderDeadlines();renderNotes();if(open&&!data.events[open]){open=null;renderEditor()}}
+function renderAll(){renderToolbar();renderDays();renderDeadlines();renderNotes();renderExams();if(open&&!data.events[open]){open=null;renderEditor()}}
 
 /* ---------- editor ---------- */
 function usedColors(){const a=[];Object.values(data.events).forEach(e=>{const c=(e.color||"").toLowerCase();if(c&&!a.includes(c))a.push(c)});return a}
@@ -547,6 +599,69 @@ $("navNt").onclick=()=>{$("ntPanel").scrollIntoView({behavior:"smooth"});$("na")
 $("navAc").onclick=()=>$("acPanel").scrollIntoView({behavior:"smooth"});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&open){closeEditor();renderDays()}});
 
+/* ---------- eksamener ---------- */
+let page="cal",editingEx=null,colorTouched=false;
+const KIND_COLOR={Skriftlig:"#F2A54A",Muntlig:"#5B8DEF",Hjemmeeksamen:"#A78BFA",Annet:"#4FC39A"};
+const parseTime=v=>{v=String(v||"").trim().replace(/[.,]/g,":");if(!v)return"";let hh,mm;
+  if(/^\d{1,2}$/.test(v)){hh=+v;mm=0}else if(/^\d{3,4}$/.test(v)){hh=+v.slice(0,-2);mm=+v.slice(-2)}else{const x=v.match(/^(\d{1,2}):(\d{1,2})$/);if(!x)return null;hh=+x[1];mm=+x[2]}
+  return hh<24&&mm<60?pad(hh)+":"+pad(mm):null};
+const exEnd=x=>x.end&&x.end>=x.date?x.end:x.date;
+function examsOn(ds){return Object.values(data.exams||{}).filter(x=>ds>=x.date&&ds<=exEnd(x))}
+function exWhen(x){const d=pd(x.date);let s=lbl(x.date);if(x.end&&x.end>x.date)s+=" – "+lbl(x.end);if(x.start)s+=" · "+x.start+(x.endTime?"–"+x.endTime:"");return s}
+function exBadge(x){const t=today(),s=Math.round((pd(x.date)-t)/864e5),e=Math.round((pd(exEnd(x))-t)/864e5);
+  if(s<=0&&e>=0)return'<span class="badge red">'+(s===0&&e===0?"I dag":"Pågår")+'</span>';
+  if(s===1)return'<span class="badge red">I morgen</span>';
+  return'<span class="badge '+(s<=7?"amb":"calm")+'">Om '+s+" dager</span>"}
+const ICO={cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>'};
+function exCard(x,past){const v=rgb(x.color||"#F2A54A").join(",");
+  return'<div class="excard'+(past?" past":"")+(editingEx===x.id?" editing":"")+'" data-ex="'+x.id+'" role="button" tabindex="0" aria-label="Endre '+esc(x.subject)+'" style="background:rgba('+v+',.18);border:1px solid rgba('+v+',.55)"><div class="dtop"><span class="extype">'+esc(x.kind||"Skriftlig")+'</span><button class="x" data-exdel="'+x.id+'" aria-label="Slett eksamen">'+ICO.x+'</button></div><b class="dtitle">'+esc(x.subject)+'</b><span class="exmeta">'+ICO.cal+exWhen(x)+'</span>'+(x.place?'<span class="exmeta">'+ICO.pin+esc(x.place)+'</span>':"")+(past?"":exBadge(x))+'</div>'}
+function renderExams(){
+  const t=ymd(today()),all=Object.values(data.exams||{});
+  const up=all.filter(x=>exEnd(x)>=t).sort((a,b)=>(a.date+(a.start||"")).localeCompare(b.date+(b.start||"")));
+  const past=all.filter(x=>exEnd(x)<t).sort((a,b)=>b.date.localeCompare(a.date));
+  $("exWarn").innerHTML=examsMissing&&user?'<p class="err" style="margin:0 0 12px">Eksamenstabellen finnes ikke i databasen ennå. Kjør SQL-en for eksamener i Supabase, så synkes de.</p>':"";
+  const nx=up[0];
+  if(nx){const dd=Math.max(0,Math.round((pd(nx.date)-today())/864e5));
+    $("exHero").innerHTML='<div><div class="exmeta" style="margin-bottom:4px">Neste eksamen</div><div style="font-size:22px;font-weight:700;line-height:1.2">'+esc(nx.subject)+'</div><div class="exmeta" style="margin-top:6px">'+ICO.cal+exWhen(nx)+'</div>'+(nx.place?'<div class="exmeta" style="margin-top:4px">'+ICO.pin+esc(nx.place)+'</div>':"")+'</div><div style="text-align:right"><div class="exbig">'+(dd===0?"I dag":dd)+'</div><div class="exmeta" style="justify-content:flex-end">'+(dd===0?"Lykke til!":dd===1?"dag igjen":"dager igjen")+'</div></div>';
+  }else $("exHero").innerHTML='<div><div style="font-size:18px;font-weight:700">Ingen kommende eksamener</div><div class="exmeta" style="margin-top:4px">Legg til en eksamen nedenfor.</div></div>';
+  $("exGrid").innerHTML=up.map(x=>exCard(x,false)).join("");
+  $("exDone").innerHTML=past.length?'<h2 style="font-size:15px;color:var(--muted);font-weight:600;margin:18px 4px 10px">Ferdig</h2><div class="dgrid">'+past.map(x=>exCard(x,true)).join("")+'</div>':"";
+}
+function setPage(p){page=p;const ex=p==="ex";
+  ["ed","days","dlPanel"].forEach(id=>{$(id).hidden=ex});$("calTools").hidden=ex;$("exPage").hidden=!ex;
+  $("tabCal").classList.toggle("on",!ex);$("tabEx").classList.toggle("on",ex);$("tabCal").setAttribute("aria-pressed",!ex);$("tabEx").setAttribute("aria-pressed",ex);
+  $("navCal").classList.toggle("on",!ex);$("navEx").classList.toggle("on",ex);
+  if(ex){closeEditor();renderExams();$("mt").textContent="Eksamener";const c=Object.values(data.exams||{}).filter(x=>exEnd(x)>=ymd(today())).length;$("rt").textContent=c?c+(c>1?" kommende eksamener":" kommende eksamen"):"Ingen kommende"}else renderToolbar();
+}
+function resetExForm(){editingEx=null;colorTouched=false;["exS","exD2","exT1","exT2","exP"].forEach(id=>$(id).value="");$("exD").value="";$("exK").value="Skriftlig";$("exC").value=KIND_COLOR.Skriftlig;$("exAdd").textContent="Legg til";$("exCancel").hidden=true;$("exFormTitle").textContent="Legg til eksamen";$("exE").textContent=""}
+$("tabCal").onclick=()=>setPage("cal");$("tabEx").onclick=()=>setPage("ex");
+$("navCal").onclick=()=>setPage("cal");$("navEx").onclick=()=>setPage("ex");
+$("exK").onchange=()=>{if(!colorTouched)$("exC").value=KIND_COLOR[$("exK").value]||"#F2A54A"};
+$("exC").oninput=()=>{colorTouched=true};
+[$("exT1"),$("exT2")].forEach(x=>{x.addEventListener("focus",()=>setTimeout(()=>x.select(),0));x.addEventListener("change",()=>{const v=parseTime(x.value);if(v===null){$("exE").textContent="Skriv tiden som 9, 930 eller 09:30"}else{x.value=v;$("exE").textContent=""}})});
+$("exAdd").onclick=()=>{
+  const s=$("exS").value.trim(),d=$("exD").value,d2=$("exD2").value,t1=parseTime($("exT1").value),t2=parseTime($("exT2").value);
+  if(!s){$("exE").textContent="Skriv hvilket fag";$("exS").focus();return}
+  if(!d){$("exE").textContent="Velg en dato";$("exD").focus();return}
+  if(d2&&d2<d){$("exE").textContent="Til dato må være etter dato";return}
+  if(t1===null||t2===null){$("exE").textContent="Skriv tiden som 9, 930 eller 09:30";return}
+  if(t1&&t2&&!d2&&toMin(t2)<=toMin(t1)){$("exE").textContent="Slutt må være etter start";return}
+  const id=editingEx||uuid(),was=!!editingEx;
+  data.exams[id]={id,subject:s,date:d,end:d2&&d2>d?d2:"",start:t1||"",endTime:t2||"",place:$("exP").value.trim(),kind:$("exK").value,color:$("exC").value};
+  enqueue("exams",id,"upsert");resetExForm();renderExams();renderDays();setPage("ex");toast(was?"Eksamen oppdatert":"«"+s+"» er lagt til");
+};
+$("exCancel").onclick=()=>{resetExForm();renderExams()};
+$("exPage").addEventListener("click",ev=>{
+  const del=ev.target.closest("[data-exdel]");
+  if(del){const x=data.exams[del.dataset.exdel];if(x&&confirm("Slette eksamen «"+x.subject+"»?")){delete data.exams[x.id];enqueue("exams",x.id,"delete");if(editingEx===x.id)resetExForm();renderExams();renderDays();setPage("ex")}return}
+  const c=ev.target.closest(".excard");
+  if(c){const x=data.exams[c.dataset.ex];if(!x)return;editingEx=x.id;colorTouched=true;$("exS").value=x.subject;$("exD").value=x.date;$("exD2").value=x.end||"";$("exT1").value=x.start||"";$("exT2").value=x.endTime||"";$("exP").value=x.place||"";$("exK").value=x.kind||"Skriftlig";$("exC").value=x.color||"#F2A54A";
+    $("exAdd").textContent="Lagre endringer";$("exCancel").hidden=false;$("exFormTitle").textContent="Endre eksamen";renderExams();$("exS").focus();$("exS").scrollIntoView({block:"center",behavior:"smooth"})}
+});
+$("exPage").addEventListener("keydown",ev=>{if((ev.key==="Enter"||ev.key===" ")&&ev.target.classList&&ev.target.classList.contains("excard")){ev.preventDefault();ev.target.click()}});
+
 /* ---------- events: deadlines ---------- */
 $("fd").value=ymd(add(today(),7));
 ["ft","fd"].forEach(id=>$(id).addEventListener("input",()=>{$("fe").textContent=""}));
@@ -579,6 +694,8 @@ function seedDemo(){
   ev.forEach(([d,t,s,e,c])=>{const id=uuid();data.events[id]={id,day:D(d),title:t,start:s,end:e,color:c}});
   const dl=[[3,"Oblig 2: Databaser","23:59",false,false],[11,"Labrapport: Nettverk","12:00",true,false],[24,"Prosjektrapport","23:59",true,false],[1,"Quiz 1","10:00",false,true]];
   dl.forEach(([d,t,k,p,done])=>{const id=uuid();data.deadlines[id]={id,title:t,date:D(d),time:k,done,pinned:p}});
+  [[29,"Software Engineering","","09:00","13:00","Remmen, sal A","Skriftlig","#F2A54A"],[32,"Anvendt robotikk","","10:30","","Robotlab","Muntlig","#5B8DEF"],[36,"Informasjonssikkerhet",38,"","","Hjemme","Hjemmeeksamen","#A78BFA"],[-150,"Statistikk","","09:00","13:00","Remmen","Skriftlig","#4FC39A"]]
+    .forEach(([d,s,e2,t1,t2,pl,k,c])=>{const id=uuid();data.exams[id]={id,subject:s,date:D(d),end:e2===""?"":D(e2),start:t1,endTime:t2,place:pl,kind:k,color:c}});
   data.notes[weekId(m)]="Dette er en demo med oppdiktede data.\nPrøv å kopiere en hendelse, feste en frist eller bytte til 3 dager.";
 }
 
